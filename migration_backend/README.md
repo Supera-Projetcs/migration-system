@@ -1,5 +1,10 @@
 # migration_backend
 
+pip install -r requirements/local.txt
+pip install -r requirements/base.txt
+
+celery -A config.celery_app worker --loglevel=info
+
 Behold My Awesome Project!
 
 [![Built with Cookiecutter Django](https://img.shields.io/badge/built%20with-Cookiecutter%20Django-ff69b4.svg?logo=cookiecutter)](https://github.com/cookiecutter/cookiecutter-django/)
