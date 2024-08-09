@@ -2,62 +2,62 @@ from django.db import models
 
 
 class Movie(models.Model):
-    id = models.IntegerField(primary_key=True, unique=True, auto_created=False)
+    movieid = models.IntegerField(primary_key=True, unique=True, auto_created=False)
     title = models.CharField(max_length=255, null=True)
     genres = models.CharField(max_length=255, null=True)
 
 class Link(models.Model):
-    movieId = models.IntegerField()
-    imdbId = models.CharField(max_length=100, null=True)
-    tmdbId = models.CharField(max_length=100, null=True)
+    movieid = models.IntegerField()
+    imdbid = models.CharField(max_length=100, null=True)
+    tmdbid = models.CharField(max_length=100, null=True)
 
     class Meta:
         db_table = "links"
 
     def __str__(self):
-        return f"{self.movie} - {self.imdbId} - {self.tmdbId}"
+        return f"{self.movieid} - {self.imdbid} - {self.tmdbid}"
 
 class GenomeScore(models.Model):
-    tagId = models.IntegerField(null=True)
-    movieId = models.IntegerField(null=True)
+    movieid = models.IntegerField(null=True)
+    tagid = models.IntegerField(null=True)
     relevance = models.FloatField(null=True)
 
     class Meta:
         db_table = "genome_scores"
 
     def __str__(self):
-        return f"{self.tagId} - {self.movieId} - {self.relevance}"
+        return f"{self.tagid} - {self.movieid} - {self.relevance}"
 
 class GenomeTag(models.Model):
-    tagId = models.IntegerField(null=True)
+    tagid = models.IntegerField(null=True)
     tag = models.CharField(max_length=255, null=True)
 
     class Meta:
         db_table = "genome_tags"
 
     def __str__(self):
-        return f"{self.tagId} - {self.tag}"
+        return f"{self.tagid} - {self.tag}"
 
 class Rating(models.Model):
-    rating = models.IntegerField(null=True)
-    userId = models.IntegerField(null=True)
-    movieId = models.IntegerField(null=True)
+    userid = models.IntegerField(null=True)
+    movieid = models.IntegerField(null=True)
+    rating = models.FloatField(null=True)
     timestamp = models.CharField(max_length=100, null=True)
 
     class Meta:
         db_table = "ratings"
 
     def __str__(self):
-        return f"{self.rating} - {self.movie}"
+        return f"{self.rating} - {self.movieid}"
 
 class Tag(models.Model):
+    userid = models.IntegerField(null=True)
+    movieid = models.IntegerField(null=True)
     tag = models.CharField(max_length=255, null=True)
-    userId = models.IntegerField(null=True)
-    movieId = models.IntegerField(null=True)
     timestamp = models.CharField(max_length=100, null=True)
 
     class Meta:
         db_table = "tags"
 
     def __str__(self):
-        return f"{self.tag} - {self.movie}"
+        return f"{self.tag} - {self.movieid}"
