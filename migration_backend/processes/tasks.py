@@ -105,7 +105,6 @@ def clean_file_name(file_path):
 
 @shared_task
 def all_files():
-    # "movies.csv", "links.csv", "genome-scores.csv", "genome-tags.csv", "ratings.csv"
     files = ["tags.csv", "movies.csv", "links.csv", "genome-scores.csv", "genome-tags.csv", "ratings.csv"]
     for file in files:
         stream_csv_in_chunks(f"{settings.BASE_DIR}/files/{file}")
