@@ -13,7 +13,6 @@ app = Celery("migration_backend")
 #   should have a `CELERY_` prefix.
 app.config_from_object("django.conf:settings", namespace="CELERY")
 app.conf.broker_connection_retry_on_startup = True
-# app.conf.broker_connection_max_retries = 10
 app.conf.update(worker_max_memory_per_child=100000)
 
 # Load task modules from all registered Django app configs.
