@@ -61,3 +61,12 @@ class Tag(models.Model):
 
     def __str__(self):
         return f"{self.tag} - {self.movieid}"
+
+#listar arquivos carregados
+class UploadedFile(models.Model):
+    file_name = models.CharField(max_length=255)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=50, default='Processing')
+    success_count = models.IntegerField(null=True, blank=True)
+    error_count = models.IntegerField(null=True, blank=True)
+    processing_duration = models.DurationField(null=True, blank=True)
