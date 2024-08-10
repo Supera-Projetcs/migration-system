@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-
+from .models import Process, ProcessChunk
 import polars as pl
 from celery import shared_task
 from celery.exceptions import MaxRetriesExceededError
@@ -9,37 +9,8 @@ from sqlalchemy import create_engine
 import psycopg2
 import io
 
-# @shared_task(bind=True, max_retries=3)
-# def process_chunk(self, file_path, start_row, end_row):
-#     try:
-#         headers_df = pl.read_csv(file_path, n_rows=1)
-#         headers = headers_df.columns
-
-#         chunk_df = pl.read_csv(
-#             file_path,
-#             skip_rows=start_row,
-#             n_rows=end_row - start_row,
-#         )
-#         chunk_df.columns = headers
-
-#         chunk_df = chunk_df.to_pandas()
-
-#         engine = create_engine(
-#             "postgresql://developerjusinvestments@127.0.0.1:5432/migration_backend",
-#         )
-
-#         chunk_df.to_sql(
-#             clean_file_name(file_path), engine, if_exists="append", index=False
-#         )
-
-#     except Exception as exc:
-#         try:
-#             raise self.retry(exc=exc)
-#         except MaxRetriesExceededError as e:
-#             logging.exception(f"Task failed after maximum retries: {e}")
-
 @shared_task(bind=True, max_retries=3)
-def process_chunk(self, file_path, start_row, end_row):
+def process_chunk(self, file_path, start_row, end_row, process_id):
     chunk_df = pl.read_csv(file_path, skip_rows=start_row, n_rows=end_row - start_row)
 
     table_name = clean_file_name(file_path)
@@ -73,27 +44,38 @@ def process_chunk(self, file_path, start_row, end_row):
             cursor.copy_expert(f"COPY genome_tags(tagId, tag) FROM STDIN WITH CSV HEADER", csv_buffer)
 
         conn.commit()
+        processchunk = ProcessChunk.objects.create(process_id=process_id, start_row=start_row, end_row=end_row, status="success")
+
     except Exception as e:
         conn.rollback()
         try:
-            raise self.retry(exc=e)
+            raise self.retry(exc=e, countdown=5)
         except MaxRetriesExceededError as exc:
+            processchunk = ProcessChunk.objects.create(process_id=process_id, start_row=start_row, end_row=end_row, status="failed", errors=str(exc))
             logging.exception(f"Task failed after maximum retries: {e}")
     finally:
         cursor.close()
         conn.close()
 
 @shared_task
-def stream_csv_in_chunks(file_path, chunk_size=30000):
+def stream_csv_in_chunks(file_path, process_id, chunk_size=40000):
 
     with Path.open(file_path) as f:
         total_lines = sum(1 for line in f)
 
         f.seek(0)
 
+        total_chunks = total_lines // chunk_size
+        if total_chunks < 12:
+            chunk_size = total_lines // 12
+            total_chunks = total_lines // chunk_size
+        process = Process.objects.get(id=process_id)
+        process.number_of_chunks = total_chunks
+        process.save()
+
         for start_row in range(0, total_lines, chunk_size):
             end_row = min(start_row + chunk_size, total_lines)
-            process_chunk.delay(str(file_path), start_row, end_row)
+            process_chunk.delay(str(file_path), start_row, end_row, process_id)
 
 
 def clean_file_name(file_path):
@@ -107,4 +89,5 @@ def clean_file_name(file_path):
 def all_files():
     files = ["tags.csv", "movies.csv", "links.csv", "genome-scores.csv", "genome-tags.csv", "ratings.csv"]
     for file in files:
-        stream_csv_in_chunks(f"{settings.BASE_DIR}/files/{file}")
+        process = Process.objects.create()
+        stream_csv_in_chunks(f"{settings.BASE_DIR}/files/{file}", process.id)
