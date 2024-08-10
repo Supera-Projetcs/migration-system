@@ -70,3 +70,5 @@ class UploadedFile(models.Model):
     success_count = models.IntegerField(null=True, blank=True)
     error_count = models.IntegerField(null=True, blank=True)
     processing_duration = models.DurationField(null=True, blank=True)
+    start_time = models.DateTimeField(null=True, blank=True)
+    end_time = models.DateTimeField(null=True, blank=True)

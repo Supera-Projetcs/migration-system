@@ -31,17 +31,15 @@ class UploadFilesView(APIView):
             # create an uploadedFile record
             uploaded_file = UploadedFile.objects.create(
                 file_name=file.name,
-                status='Processing'
+                status='Processing',
+                start_time=timezone.now()  # tempo de inicio 
             )
 
-            start_time = timezone.now()
             stream_csv_in_chunks.delay(file_path, uploaded_file.id)
-            end_time = timezone.now()
 
             upload_info.append({
                 'file_name': file.name,
-                'start_time': start_time,
-                'end_time': end_time,
+                'start_time': uploaded_file.start_time,
                 'status': 'Processing started',
             })
 

@@ -9,6 +9,7 @@ from django.conf import settings
 from sqlalchemy import create_engine
 import psycopg2
 import io
+from datetime import timezone
 
 # @shared_task(bind=True, max_retries=3)
 # def process_chunk(self, file_path, start_row, end_row):
@@ -87,6 +88,9 @@ def process_chunk(self, file_path, start_row, end_row, uploaded_file_id):
     finally:
         cursor.close()
         conn.close()
+        end_time = timezone.now()
+        uploaded_file.end_time = end_time
+        uploaded_file.processing_duration = end_time - uploaded_file.start_time
         uploaded_file.save()
 
 @shared_task
