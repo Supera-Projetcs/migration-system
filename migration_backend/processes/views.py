@@ -14,9 +14,11 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
 from django.db.models import Avg, Count
 from django.db.models import Func, CharField, Q
+from rest_framework.permissions import AllowAny
 
 class UploadFilesView(APIView):
     parser_classes = [MultiPartParser]
+    permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
         files = request.FILES.getlist('files')
@@ -48,6 +50,7 @@ class UploadFilesView(APIView):
 class UploadedFileListView(ListAPIView):
     queryset = UploadedFile.objects.all()
     serializer_class = UploadedFileSerializer
+    permission_classes = [AllowAny]
 
 
 class ExtractYearFromTitle(Func):
@@ -61,6 +64,7 @@ class MovieSearchView(ListAPIView):
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ['genres']
     search_fields = ['title']
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         queryset = Movie.objects.annotate(
@@ -95,6 +99,7 @@ class MovieSearchView(ListAPIView):
 
 
 class GenreListView(APIView):
+    permission_classes = [AllowAny]
     def get(self, request):
         genres = Movie.objects.values_list('genres', flat=True).distinct()
         genre_list = set()
