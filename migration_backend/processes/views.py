@@ -19,6 +19,7 @@ from rest_framework.permissions import AllowAny
 class UploadFilesView(APIView):
     parser_classes = [MultiPartParser]
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def post(self, request, *args, **kwargs):
         files = request.FILES.getlist('files')
@@ -51,6 +52,7 @@ class UploadedFileListView(ListAPIView):
     queryset = UploadedFile.objects.all()
     serializer_class = UploadedFileSerializer
     permission_classes = [AllowAny]
+    authentication_classes = []
 
 
 class ExtractYearFromTitle(Func):
@@ -65,6 +67,7 @@ class MovieSearchView(ListAPIView):
     filterset_fields = ['genres']
     search_fields = ['title']
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def get_queryset(self):
         queryset = Movie.objects.annotate(
@@ -100,6 +103,7 @@ class MovieSearchView(ListAPIView):
 
 class GenreListView(APIView):
     permission_classes = [AllowAny]
+    authentication_classes = []
     def get(self, request):
         genres = Movie.objects.values_list('genres', flat=True).distinct()
         genre_list = set()
@@ -109,6 +113,8 @@ class GenreListView(APIView):
 
 
 class ListUploadedFilesView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
     def get(self, request):
         uploaded_files = UploadedFile.objects.all()
         serializer = UploadedFileSerializer(uploaded_files, many=True)
