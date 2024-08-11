@@ -9,7 +9,7 @@ from django.conf import settings
 from sqlalchemy import create_engine
 import psycopg2
 import io
-from datetime import timezone
+from django.utils import timezone
 
 
 @shared_task(bind=True, max_retries=3)
@@ -66,11 +66,11 @@ def process_chunk(self, file_path, start_row, end_row, uploaded_file_id):
             )
 
         conn.commit()
-        uploaded_file.success_count += chunk_df.shape[0]
+        uploaded_file.success_count += 1
 
     except Exception as e:
         conn.rollback()
-        uploaded_file.error_count += chunk_df.shape[0]
+        uploaded_file.error_count += 1
         try:
             raise self.retry(exc=e, countdown=5)
         except MaxRetriesExceededError as exc:
