@@ -31,3 +31,5 @@ psycopg-c==3.2.1
 pyarrow==17.0.0
 s3transfer==0.10.2
 SQLAlchemy==2.0.32
+django-filter>=23.1.1
+
