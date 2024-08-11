@@ -41,9 +41,15 @@ class UploadFilesView(APIView):
             stream_csv_in_chunks.delay(file_path, uploaded_file.id)
 
             upload_info.append({
-                'file_name': file.name,
+                'id': uploaded_file.id,
+                'file_name': uploaded_file.file_name,
+                'uploaded_at': uploaded_file.start_time,
+                'status': uploaded_file.status,
+                'success_count': uploaded_file.success_count,
+                'error_count': uploaded_file.error_count,
+                'processing_duration': uploaded_file.processing_duration,
                 'start_time': uploaded_file.start_time,
-                'status': 'Processing started',
+                'end_time': uploaded_file.end_time
             })
 
         return Response(upload_info, status=status.HTTP_201_CREATED)
