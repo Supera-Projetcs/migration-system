@@ -73,8 +73,8 @@ class UploadedFile(models.Model):
     file_name = models.CharField(max_length=255)
     uploaded_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=50, default='Processing')
-    success_count = models.IntegerField(null=True, blank=True)
-    error_count = models.IntegerField(null=True, blank=True)
+    success_count = models.IntegerField(default=0, null=False, blank=True)
+    error_count = models.IntegerField(default=0, null=False, blank=True)
     processing_duration = models.DurationField(null=True, blank=True)
     start_time = models.DateTimeField(null=True, blank=True)
     end_time = models.DateTimeField(null=True, blank=True)
@@ -90,3 +90,6 @@ class ProcessChunk(models.Model):
     end_row = models.IntegerField(null=True)
     status = models.CharField(max_length=255, null=True)
     errors = models.TextField(null=True)
+
+    def finished_with_errors(self):
+        return self.processchunk_set.filter(status="failed").count()

@@ -1,4 +1,4 @@
-from config import settings
+from django.conf import settings
 from migration_backend.processes.tasks import stream_csv_in_chunks
 from rest_framework.parsers import MultiPartParser
 from rest_framework.views import APIView
@@ -106,3 +106,10 @@ class GenreListView(APIView):
         for genre_str in genres:
             genre_list.update(genre_str.split('|'))
         return Response(sorted(genre_list))
+
+
+class ListUploadedFilesView(APIView):
+    def get(self, request):
+        uploaded_files = UploadedFile.objects.all()
+        serializer = UploadedFileSerializer(uploaded_files, many=True)
+        return Response(serializer.data)
