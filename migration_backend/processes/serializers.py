@@ -9,8 +9,8 @@ class UploadedFileSerializer(serializers.ModelSerializer):
 
 
 class MovieSerializer(serializers.ModelSerializer):
-    average_rating = serializers.FloatField()
-    num_votes = serializers.IntegerField()
+    average_rating = serializers.FloatField(read_only=True)
+    num_votes = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Movie
