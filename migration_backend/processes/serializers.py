@@ -11,8 +11,7 @@ class UploadedFileSerializer(serializers.ModelSerializer):
 class MovieSerializer(serializers.ModelSerializer):
     average_rating = serializers.FloatField()
     num_votes = serializers.IntegerField()
-    release_date = serializers.CharField()
 
     class Meta:
         model = Movie
-        fields = ['movieid', 'title', 'genres', 'release_date', 'average_rating', 'num_votes']
+        fields = ['movieid', 'title', 'genres', 'average_rating', 'num_votes']
