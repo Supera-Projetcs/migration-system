@@ -63,7 +63,8 @@ class UploadedFileListView(ListAPIView):
 
 class ExtractYearFromTitle(Func):
     function = 'regexp_matches'
-    template = "%(function)s(%(expressions)s, '\\((\\d{4})\\)', 'g')[1]" # extrair 4 digitos dentro de parenteses (ano)
+    template = "%(function)s(%(expressions)s, '\\((\\d{4})\\)', 'g')[1]"
+    output_field = CharField()
 
     def __init__(self, expression, **extra):
         super().__init__(expression, output_field=CharField(), **extra)
@@ -78,7 +79,9 @@ class MovieSearchView(ListAPIView):
     def get_queryset(self):
         queryset = Movie.objects.annotate(
             average_rating=Avg('rating__rating'), # media de avaliacoes
-            num_votes=Count('rating') # numero de avaliacoes
+            num_votes=Count('rating'), # numero de avaliacoes
+            release_year=ExtractYearFromTitle('title')  # Extraindo o ano do título
+        
         )
 
         min_rating = self.request.query_params.get('min_rating')
@@ -93,7 +96,7 @@ class MovieSearchView(ListAPIView):
         if min_votes:
             queryset = queryset.filter(num_votes__gte=min_votes)
         if user_id:
-            queryset = queryset.filter(rating__userId=user_id)
+            queryset = queryset.filter(rating__userid=user_id)
         if year_start and year_end:
             queryset = queryset.filter(release_year__range=[year_start, year_end])
         if genres:
