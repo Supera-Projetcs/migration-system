@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Rating, Movie, Link, GenomeScore, GenomeTag, Tag, Process, ProcessChunk
+from .models import Rating, Movie, Link, GenomeScore, GenomeTag, Tag, ProcessChunk, UploadedFile
 
 admin.site.register(Rating)
 admin.site.register(Movie)
@@ -10,10 +10,11 @@ admin.site.register(GenomeTag)
 admin.site.register(Tag)
 
 
-@admin.register(Process)
-class ProcessAdmin(admin.ModelAdmin):
-    list_display = ('id', 'number_of_chunks', 'started', 'finished_chunks', 'finished_with_errors')
+@admin.register(UploadedFile)
+class UploadedFileAdmin(admin.ModelAdmin):
+    list_display = ('id', 'file_name', 'status', "finished_with_errors")
+
 
 @admin.register(ProcessChunk)
 class ProcessChunkAdmin(admin.ModelAdmin):
-    list_display = ('id', 'process_id', 'start_row', 'end_row', 'status', 'errors')
+    list_display = ('id', 'uploaded_file_id', 'start_row', 'end_row', 'status', 'errors')

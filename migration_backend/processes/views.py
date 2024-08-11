@@ -32,7 +32,7 @@ class UploadFilesView(APIView):
             uploaded_file = UploadedFile.objects.create(
                 file_name=file.name,
                 status='Processing',
-                start_time=timezone.now()  # tempo de inicio 
+                start_time=timezone.now()  # tempo de inicio
             )
 
             stream_csv_in_chunks.delay(file_path, uploaded_file.id)
@@ -44,6 +44,7 @@ class UploadFilesView(APIView):
             })
 
         return Response(upload_info, status=status.HTTP_201_CREATED)
+
 class UploadedFileListView(ListAPIView):
     queryset = UploadedFile.objects.all()
     serializer_class = UploadedFileSerializer
@@ -66,7 +67,7 @@ class MovieSearchView(ListAPIView):
             average_rating=Avg('rating__rating'), # media de avaliacoes
             num_votes=Count('rating') # numero de avaliacoes
         )
-        
+
         min_rating = self.request.query_params.get('min_rating')
         min_votes = self.request.query_params.get('min_votes')
         user_id = self.request.query_params.get('user_id')
@@ -91,7 +92,7 @@ class MovieSearchView(ListAPIView):
             queryset = queryset.filter(query)
 
         return queryset
-    
+
 
 class GenreListView(APIView):
     def get(self, request):

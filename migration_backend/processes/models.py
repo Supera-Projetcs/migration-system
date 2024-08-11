@@ -1,26 +1,6 @@
 from django.db import models
 
 
-class Process(models.Model):
-    # file = models.FileField(upload_to="uploads/")
-    started = models.DateTimeField(auto_now_add=True)
-    number_of_chunks = models.IntegerField(null=True)
-
-    def finished_chunks(self):
-        return self.processchunk_set.filter(status="success").count() - 1
-
-    def finished_with_errors(self):
-        return self.processchunk_set.filter(status="failed").count()
-
-class ProcessChunk(models.Model):
-    process = models.ForeignKey(Process, on_delete=models.CASCADE)
-    # file_path = models.CharField(max_length=255, null=True)
-    ended = models.DateTimeField(auto_now_add=True)
-    start_row = models.IntegerField(null=True)
-    end_row = models.IntegerField(null=True)
-    status = models.CharField(max_length=255, null=True)
-    errors = models.TextField(null=True)
-
 class Movie(models.Model):
     movieid = models.IntegerField(primary_key=True, unique=True, auto_created=False)
     title = models.CharField(max_length=255, null=True)
@@ -98,3 +78,15 @@ class UploadedFile(models.Model):
     processing_duration = models.DurationField(null=True, blank=True)
     start_time = models.DateTimeField(null=True, blank=True)
     end_time = models.DateTimeField(null=True, blank=True)
+
+    def finished_with_errors(self):
+        return self.processchunk_set.filter(status="failed").count()
+
+
+class ProcessChunk(models.Model):
+    uploaded_file = models.ForeignKey(UploadedFile, on_delete=models.CASCADE)
+    ended = models.DateTimeField(auto_now_add=True)
+    start_row = models.IntegerField(null=True)
+    end_row = models.IntegerField(null=True)
+    status = models.CharField(max_length=255, null=True)
+    errors = models.TextField(null=True)
