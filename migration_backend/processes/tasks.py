@@ -1,6 +1,7 @@
 import logging
 from pathlib import Path
-from .models import Process, ProcessChunk
+from migration_backend.processes.models import UploadedFile, Process, ProcessChunk
+
 import polars as pl
 from celery import shared_task
 from celery.exceptions import MaxRetriesExceededError
@@ -8,9 +9,12 @@ from django.conf import settings
 from sqlalchemy import create_engine
 import psycopg2
 import io
+from datetime import timezone
 
 @shared_task(bind=True, max_retries=3)
-def process_chunk(self, file_path, start_row, end_row, process_id):
+def process_chunk(self, file_path, start_row, end_row, uploaded_file_id):
+    uploaded_file = UploadedFile.objects.get(id=uploaded_file_id)
+
     chunk_df = pl.read_csv(file_path, skip_rows=start_row, n_rows=end_row - start_row)
 
     table_name = clean_file_name(file_path)
@@ -44,10 +48,11 @@ def process_chunk(self, file_path, start_row, end_row, process_id):
             cursor.copy_expert(f"COPY genome_tags(tagId, tag) FROM STDIN WITH CSV HEADER", csv_buffer)
 
         conn.commit()
-        processchunk = ProcessChunk.objects.create(process_id=process_id, start_row=start_row, end_row=end_row, status="success")
+        uploaded_file.success_count += chunk_df.shape[0]
 
     except Exception as e:
         conn.rollback()
+        uploaded_file.error_count += chunk_df.shape[0]
         try:
             raise self.retry(exc=e, countdown=5)
         except MaxRetriesExceededError as exc:
@@ -56,9 +61,14 @@ def process_chunk(self, file_path, start_row, end_row, process_id):
     finally:
         cursor.close()
         conn.close()
+        end_time = timezone.now()
+        uploaded_file.end_time = end_time
+        uploaded_file.processing_duration = end_time - uploaded_file.start_time
+        uploaded_file.save()
 
 @shared_task
-def stream_csv_in_chunks(file_path, process_id, chunk_size=40000):
+def stream_csv_in_chunks(file_path, uploaded_file_id, chunk_size=30000):
+
 
     with Path.open(file_path) as f:
         total_lines = sum(1 for line in f)
@@ -75,7 +85,8 @@ def stream_csv_in_chunks(file_path, process_id, chunk_size=40000):
 
         for start_row in range(0, total_lines, chunk_size):
             end_row = min(start_row + chunk_size, total_lines)
-            process_chunk.delay(str(file_path), start_row, end_row, process_id)
+            process_chunk.delay(str(file_path), start_row, end_row, uploaded_file_id)
+
 
 
 def clean_file_name(file_path):
