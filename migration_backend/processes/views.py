@@ -99,6 +99,11 @@ class MovieSearchView(ListAPIView):
             queryset = queryset.filter(rating__userid=user_id)
         if year_start and year_end:
             queryset = queryset.filter(release_year__range=[year_start, year_end])
+        elif year_start:
+            queryset = queryset.filter(release_year__gte=year_start)
+        elif year_end:
+            queryset = queryset.filter(release_year__lte=year_end)
+
         if genres:
             # filtra pelos gêneros fornecidos, divididos por vírgula ou pipe
             genre_list = genres.split('|')
