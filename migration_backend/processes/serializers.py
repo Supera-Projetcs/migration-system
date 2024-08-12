@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from .models import Link, UploadedFile
 from .models import Movie
+from .models import Rating
+from django.db.models import Avg
 
 class UploadedFileSerializer(serializers.ModelSerializer):
     class Meta:

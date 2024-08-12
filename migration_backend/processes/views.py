@@ -93,28 +93,31 @@ class MovieSearchView(ListAPIView):
         query = Q()
 
         if min_rating:
-            query += Q(rating__rating__gte=min_rating)
+            query &= Q(rating__rating__gte=min_rating)
         if min_votes:
-            query += Q(rating__count__gte=min_votes)
+            query &= Q(rating__count__gte=min_votes)
         if user_id:
-            query += Q(rating__user_id=user_id)
+            query &= Q(rating__user_id=user_id)
         if year_start and year_end:
-            query += Q(release_year__gte=year_start) & Q(release_year__lte=year_end)
+            query &= Q(release_year__gte=year_start) & Q(release_year__lte=year_end)
         elif year_start:
-            query += Q(release_year__gte=year_start)
+            query &= Q(release_year__gte=year_start)
         elif year_end:
-            query += Q(release_year__lte=year_end)
-
+            query &= Q(release_year__lte=year_end)
 
         queryset = Movie.objects.annotate(
-            average_rating_in_time=Avg('rating__rating'), # media de avaliacoes
-            num_votes_in_time=Count('rating'), # numero de avaliacoes
             release_year=ExtractYearFromTitle('title')  # Extraindo o ano do título
         ).filter(query)
 
         queryset = queryset.distinct()
 
         return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        print(context)
+        return context
+
 
 class GenreListView(APIView):
     permission_classes = [AllowAny]

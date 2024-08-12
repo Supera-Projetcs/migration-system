@@ -4,8 +4,14 @@ class Movie(models.Model):
     movieid = models.IntegerField(primary_key=True, unique=True, auto_created=False)
     title = models.CharField(max_length=255, null=True)
     genres = models.CharField(max_length=255, null=True)
-    average_rating = models.FloatField(null=True, default=0)
-    num_votes = models.IntegerField(null=True, default=0)
+    # average_rating = models.FloatField(null=True, default=0)
+    # num_votes = models.IntegerField(null=True, default=0)
+
+    def average_rating(self):
+        return round(self.rating_set.filter(rating__isnull=False).aggregate(models.Avg('rating'))['rating__avg'], 2)
+
+    def num_votes(self):
+        return self.rating_set.count()
 
     class Meta:
         db_table = "movies"
