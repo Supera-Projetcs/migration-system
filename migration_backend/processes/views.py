@@ -9,10 +9,10 @@ from rest_framework import status
 from django.utils import timezone
 import os
 from django.db.models import Q, Count
-
+from django.db import connection
 
 from rest_framework.generics import ListAPIView
-from .models import Movie, UploadedFile
+from .models import Movie, UploadedFile, MovieRatingsSummary
 from .serializers import MovieSerializer, UploadedFileSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
@@ -74,6 +74,7 @@ class ExtractYearFromTitle(Func):
     def __init__(self, expression, **extra):
         super().__init__(expression, output_field=CharField(), **extra)
 
+
 class MovieSearchView(ListAPIView):
     serializer_class = MovieSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter]
@@ -93,11 +94,9 @@ class MovieSearchView(ListAPIView):
         query = Q()
 
         if min_rating:
-            query &= Q(rating__rating__gte=min_rating)
+            query &= Q(average_rating__gte=min_rating)
         if min_votes:
-            query &= Q(rating__count__gte=min_votes)
-        if user_id:
-            query &= Q(rating__user_id=user_id)
+            query &= Q(num_votes__gte=min_votes)
         if year_start and year_end:
             query &= Q(release_year__gte=year_start) & Q(release_year__lte=year_end)
         elif year_start:
@@ -105,18 +104,9 @@ class MovieSearchView(ListAPIView):
         elif year_end:
             query &= Q(release_year__lte=year_end)
 
-        queryset = Movie.objects.annotate(
-            release_year=ExtractYearFromTitle('title')  # Extraindo o ano do título
-        ).filter(query)
-
-        queryset = queryset.distinct()
+        queryset = MovieRatingsSummary.objects.filter(query).distinct()
 
         return queryset
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        print(context)
-        return context
 
 
 class GenreListView(APIView):

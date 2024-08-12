@@ -63,6 +63,18 @@ class Rating(models.Model):
     def __str__(self):
         return f"{self.rating} - {self.movieid}"
 
+class MovieRatingsSummary(models.Model):
+    movieid = models.IntegerField(primary_key=True)
+    title = models.CharField(max_length=255)
+    genres = models.CharField(max_length=255)
+    average_rating = models.FloatField()
+    num_votes = models.IntegerField()
+    release_year = models.IntegerField()
+
+    class Meta:
+        managed = False
+        db_table = 'movie_ratings_summary'
+
 class Tag(models.Model):
     userid = models.IntegerField(null=True)
     movieid = models.ForeignKey(Movie, on_delete=models.CASCADE, db_column="movieid")
