@@ -7,9 +7,11 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.utils import timezone
 import os
-from django.db.models.functions import ExtractYear
+from django.db.models import Q
 
 from django.core.cache import cache
+from django.core.serializers import serialize, deserialize
+import json
 
 from rest_framework.generics import ListAPIView
 from .models import Movie, UploadedFile
@@ -72,7 +74,7 @@ class ExtractYearFromTitle(Func):
 
     def __init__(self, expression, **extra):
         super().__init__(expression, output_field=CharField(), **extra)
-        
+
 class MovieSearchView(ListAPIView):
     serializer_class = MovieSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter]
@@ -82,43 +84,36 @@ class MovieSearchView(ListAPIView):
     authentication_classes = []
 
     def get_queryset(self):
-        cache_key = f"movies_queryset_{self.request.query_params.get('min_rating', '')}_{self.request.query_params.get('min_votes', '')}_{self.request.query_params.get('user_id', '')}_{self.request.query_params.get('year_start', '')}_{self.request.query_params.get('year_end', '')}"
 
-        queryset = cache.get(cache_key)
+        min_rating = self.request.query_params.get('min_rating')
+        min_votes = self.request.query_params.get('min_votes')
+        user_id = self.request.query_params.get('user_id')
+        year_start = self.request.query_params.get('year_start')
+        year_end = self.request.query_params.get('year_end')
 
-        if queryset is None:
+        query = Q()
 
-            queryset = Movie.objects.annotate(
-                average_rating=Avg('rating__rating'), # media de avaliacoes
-                num_votes=Count('rating'), # numero de avaliacoes
-                release_year=ExtractYearFromTitle('title')  # Extraindo o ano do título
+        if min_rating:
+            query += Q(rating__rating__gte=min_rating)
+        if min_votes:
+            query += Q(rating__count__gte=min_votes)
+        if user_id:
+            query += Q(rating__user_id=user_id)
+        if year_start and year_end:
+            query += Q(release_year__gte=year_start) & Q(release_year__lte=year_end)
+        elif year_start:
+            query += Q(release_year__gte=year_start)
+        elif year_end:
+            query += Q(release_year__lte=year_end)
 
-            )
 
-            min_rating = self.request.query_params.get('min_rating')
-            min_votes = self.request.query_params.get('min_votes')
-            user_id = self.request.query_params.get('user_id')
-            year_start = self.request.query_params.get('year_start')
-            year_end = self.request.query_params.get('year_end')
+        queryset = Movie.objects.annotate(
+            average_rating=Avg('rating__rating'), # media de avaliacoes
+            num_votes=Count('rating'), # numero de avaliacoes
+            release_year=ExtractYearFromTitle('title')  # Extraindo o ano do título
+        ).filter(query)
 
-            if min_rating:
-                queryset = queryset.filter(average_rating__gte=min_rating)
-            if min_votes:
-                queryset = queryset.filter(num_votes__gte=min_votes)
-            if user_id:
-                queryset = queryset.filter(rating__userid=user_id)
-            if year_start and year_end:
-                queryset = queryset.filter(release_year__range=[year_start, year_end])
-            elif year_start:
-                queryset = queryset.filter(release_year__gte=year_start)
-            elif year_end:
-                queryset = queryset.filter(release_year__lte=year_end)
-
-            queryset = queryset.distinct()
-
-            queryset_list = list(queryset)
-
-            cache.set(cache_key, queryset_list, timeout=300)
+        queryset = queryset.distinct()
 
         return queryset
 
