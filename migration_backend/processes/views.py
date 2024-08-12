@@ -1,4 +1,5 @@
 from django.conf import settings
+from migration_backend.processes.filters import MovieFilter
 from migration_backend.processes.tasks import stream_csv_in_chunks
 from rest_framework.parsers import MultiPartParser
 from rest_framework.views import APIView
@@ -13,7 +14,7 @@ from .serializers import MovieSerializer, UploadedFileSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
 from django.db.models import Avg, Count
-from django.db.models import Func, CharField, Q
+from django.db.models import Func, CharField
 from rest_framework.permissions import AllowAny
 
 class UploadFilesView(APIView):
@@ -71,7 +72,7 @@ class ExtractYearFromTitle(Func):
 class MovieSearchView(ListAPIView):
     serializer_class = MovieSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter]
-    filterset_fields = ['genres']
+    filterset_class = MovieFilter
     search_fields = ['title']
     permission_classes = [AllowAny]
     authentication_classes = []
@@ -89,7 +90,6 @@ class MovieSearchView(ListAPIView):
         user_id = self.request.query_params.get('user_id')
         year_start = self.request.query_params.get('year_start')
         year_end = self.request.query_params.get('year_end')
-        genres = self.request.query_params.get('genres')
 
         if min_rating:
             queryset = queryset.filter(average_rating__gte=min_rating)
@@ -104,15 +104,7 @@ class MovieSearchView(ListAPIView):
         elif year_end:
             queryset = queryset.filter(release_year__lte=year_end)
 
-        if genres:
-            # filtra pelos gêneros fornecidos, divididos por vírgula ou pipe
-            genre_list = genres.split('|')
-            query = Q()
-            for genre in genre_list:
-                query |= Q(genres__icontains=genre)
-            queryset = queryset.filter(query)
-
-        return queryset
+        return queryset.distinct()
 
 
 class GenreListView(APIView):
