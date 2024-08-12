@@ -4,8 +4,16 @@ class Movie(models.Model):
     movieid = models.IntegerField(primary_key=True, unique=True, auto_created=False)
     title = models.CharField(max_length=255, null=True)
     genres = models.CharField(max_length=255, null=True)
-    average_rating = models.FloatField(null=True, default=0)
-    num_votes = models.IntegerField(null=True, default=0)
+
+    # average_rating = models.FloatField(null=True, default=0)
+    # num_votes = models.IntegerField(null=True, default=0)
+
+    def average_rating(self):
+        return round(self.rating_set.filter(rating__isnull=False).aggregate(models.Avg('rating'))['rating__avg'], 2)
+
+    def num_votes(self):
+        return self.rating_set.count()
+
 
     class Meta:
         db_table = "movies"
@@ -56,6 +64,18 @@ class Rating(models.Model):
 
     def __str__(self):
         return f"{self.rating} - {self.movieid}"
+
+class MovieRatingsSummary(models.Model):
+    movieid = models.IntegerField(primary_key=True)
+    title = models.CharField(max_length=255)
+    genres = models.CharField(max_length=255)
+    average_rating = models.FloatField()
+    num_votes = models.IntegerField()
+    release_year = models.IntegerField()
+
+    class Meta:
+        managed = False
+        db_table = 'movie_ratings_summary'
 
 class Tag(models.Model):
     userid = models.IntegerField(null=True)

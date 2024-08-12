@@ -6,11 +6,15 @@ import polars as pl
 from celery import shared_task
 from celery.exceptions import MaxRetriesExceededError
 from django.conf import settings
-from sqlalchemy import create_engine
+from django.db import connection
 import psycopg2
 import io
 from django.utils import timezone
 
+
+def refresh_movie_ratings_summary():
+    with connection.cursor() as cursor:
+        cursor.execute("REFRESH MATERIALIZED VIEW movie_ratings_summary;")
 
 @shared_task(bind=True, max_retries=3)
 def process_chunk(self, file_path, start_row, end_row, uploaded_file_id):
@@ -52,6 +56,9 @@ def process_chunk(self, file_path, start_row, end_row, uploaded_file_id):
 
         conn.commit()
         uploaded_file.success_count += 1
+
+        if table_name == "ratings":
+            refresh_movie_ratings_summary()
 
     except Exception as e:
         conn.rollback()

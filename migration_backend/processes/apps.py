@@ -5,4 +5,4 @@ class ProcessesConfig(AppConfig):
     name = "migration_backend.processes"
 
     def ready(self):
-            import migration_backend.processes.signals
+        import migration_backend.processes.signals

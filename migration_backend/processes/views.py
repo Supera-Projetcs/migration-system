@@ -8,9 +8,12 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.utils import timezone
 import os
+from django.db.models import Q, Count
+from django.db import connection
 
 from rest_framework.generics import ListAPIView
-from .models import Movie, Rating, UploadedFile
+
+from .models import Movie, UploadedFile, MovieRatingsSummary
 from .serializers import MovieSerializer, UploadedFileSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
@@ -18,6 +21,7 @@ from django.db.models import Avg
 from django.db.models import Func, CharField
 from rest_framework.permissions import AllowAny
 from django.db.models.signals import post_save
+
 
 class UploadFilesView(APIView):
     parser_classes = [MultiPartParser]
@@ -71,7 +75,8 @@ class ExtractYearFromTitle(Func):
 
     def __init__(self, expression, **extra):
         super().__init__(expression, output_field=CharField(), **extra)
-        
+
+
 class MovieSearchView(ListAPIView):
     serializer_class = MovieSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter]
@@ -81,9 +86,6 @@ class MovieSearchView(ListAPIView):
     authentication_classes = []
 
     def get_queryset(self):
-        queryset = Movie.objects.annotate(
-            release_year=ExtractYearFromTitle('title')  # Extraindo o ano do título
-        )
 
         min_rating = self.request.query_params.get('min_rating')
         min_votes = self.request.query_params.get('min_votes')
@@ -91,20 +93,22 @@ class MovieSearchView(ListAPIView):
         year_start = self.request.query_params.get('year_start')
         year_end = self.request.query_params.get('year_end')
 
-        if min_rating:
-            queryset = queryset.filter(average_rating__gte=min_rating)
-        if min_votes:
-            queryset = queryset.filter(num_votes__gte=min_votes)
-        if user_id:
-            queryset = queryset.filter(rating__userid=user_id)
-        if year_start and year_end:
-            queryset = queryset.filter(release_year__range=[year_start, year_end])
-        elif year_start:
-            queryset = queryset.filter(release_year__gte=year_start)
-        elif year_end:
-            queryset = queryset.filter(release_year__lte=year_end)
+        query = Q()
 
-        return queryset.distinct()
+        if min_rating:
+            query &= Q(average_rating__gte=min_rating)
+        if min_votes:
+            query &= Q(num_votes__gte=min_votes)
+        if year_start and year_end:
+            query &= Q(release_year__gte=year_start) & Q(release_year__lte=year_end)
+        elif year_start:
+            query &= Q(release_year__gte=year_start)
+        elif year_end:
+            query &= Q(release_year__lte=year_end)
+
+        queryset = MovieRatingsSummary.objects.filter(query).distinct()
+
+        return queryset
 
 
 class GenreListView(APIView):
