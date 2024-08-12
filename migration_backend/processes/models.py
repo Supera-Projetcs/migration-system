@@ -1,6 +1,5 @@
 from django.db import models
 
-
 class Movie(models.Model):
     movieid = models.IntegerField(primary_key=True, unique=True, auto_created=False)
     title = models.CharField(max_length=255, null=True)
@@ -13,7 +12,7 @@ class Movie(models.Model):
         return f"{self.movieid} - {self.title} - {self.genres}"
 
 class Link(models.Model):
-    movieid = models.IntegerField(db_column="movieid")
+    movieid = models.ForeignKey(Movie, on_delete=models.CASCADE, db_column="movieid")
     imdbid = models.CharField(max_length=100, null=True)
     tmdbid = models.CharField(max_length=100, null=True)
 
@@ -24,7 +23,7 @@ class Link(models.Model):
         return f"{self.movieid} - {self.imdbid} - {self.tmdbid}"
 
 class GenomeScore(models.Model):
-    movieid = models.IntegerField(db_column="movieid")
+    movieid = models.ForeignKey(Movie, on_delete=models.CASCADE, db_column="movieid")
     tagid = models.IntegerField(null=True)
     relevance = models.FloatField(null=True)
 
@@ -46,7 +45,7 @@ class GenomeTag(models.Model):
 
 class Rating(models.Model):
     userid = models.IntegerField(null=True)
-    movieid = models.IntegerField(null=True)
+    movieid = models.ForeignKey(Movie, on_delete=models.CASCADE)
     rating = models.FloatField(null=True)
     timestamp = models.CharField(max_length=100, null=True)
 
@@ -58,7 +57,7 @@ class Rating(models.Model):
 
 class Tag(models.Model):
     userid = models.IntegerField(null=True)
-    movieid = models.IntegerField(null=True)
+    movieid = models.ForeignKey(Movie, on_delete=models.CASCADE)
     tag = models.CharField(max_length=255, null=True)
     timestamp = models.CharField(max_length=100, null=True)
 
@@ -67,7 +66,7 @@ class Tag(models.Model):
 
     def __str__(self):
         return f"{self.tag} - {self.movieid}"
-
+    
 #listar arquivos carregados
 class UploadedFile(models.Model):
     file_name = models.CharField(max_length=255)
@@ -81,7 +80,6 @@ class UploadedFile(models.Model):
 
     def finished_with_errors(self):
         return self.processchunk_set.filter(status="failed").count()
-
 
 class ProcessChunk(models.Model):
     uploaded_file = models.ForeignKey(UploadedFile, on_delete=models.CASCADE)
