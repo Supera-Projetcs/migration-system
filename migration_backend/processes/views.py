@@ -12,6 +12,7 @@ from django.db.models import Q, Count
 from django.db import connection
 
 from rest_framework.generics import ListAPIView
+
 from .models import Movie, UploadedFile, MovieRatingsSummary
 from .serializers import MovieSerializer, UploadedFileSerializer
 from django_filters.rest_framework import DjangoFilterBackend
@@ -19,6 +20,7 @@ from rest_framework.filters import SearchFilter
 from django.db.models import Avg
 from django.db.models import Func, CharField
 from rest_framework.permissions import AllowAny
+from django.db.models.signals import post_save
 
 
 class UploadFilesView(APIView):

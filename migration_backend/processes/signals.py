@@ -10,8 +10,9 @@ def update_movie_ratings(sender, instance, **kwargs):
         movie = instance.movieid
         average_rating = Rating.objects.filter(movieid=movie).aggregate(Avg('rating'))['rating__avg']
         num_votes = Rating.objects.filter(movieid=movie).count()
-
+        
         # atualiza o modelo de movie
         movie.average_rating = average_rating or 0
         movie.num_votes = num_votes
         movie.save()
+

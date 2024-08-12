@@ -15,6 +15,7 @@ class LinkSerializer(serializers.ModelSerializer):
         fields = ['imdbid', 'tmdbid']
 
 class MovieSerializer(serializers.ModelSerializer):
+
     link = LinkSerializer(source='link_set.first', read_only=True)
     # average_rating = serializers.SerializerMethodField()
     # num_votes = serializers.SerializerMethodField()
