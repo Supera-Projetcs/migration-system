@@ -28,9 +28,9 @@ def process_chunk(self, file_path, start_row, end_row, uploaded_file_id):
     csv_buffer.seek(0)
 
     conn = psycopg2.connect(
-        dbname="migration_backend",
-        user="developerjusinvestments",
-        password="",
+        dbname="films_migrate",
+        user="postgres",
+        password="123mepep",
         host="127.0.0.1",
         port="5432",
     )
