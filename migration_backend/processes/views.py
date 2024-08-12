@@ -125,17 +125,3 @@ class ListUploadedFilesView(APIView):
         uploaded_files = UploadedFile.objects.all()
         serializer = UploadedFileSerializer(uploaded_files, many=True)
         return Response(serializer.data)
-
-
-@receiver(post_save, sender=Rating)
-def update_movie_ratings(sender, instance, **kwargs):
-    # acessa o id do filme na avaliacao
-    if instance.movieid:
-        movie = instance.movieid
-        average_rating = Rating.objects.filter(movieid=movie).aggregate(Avg('rating'))['rating__avg']
-        num_votes = Rating.objects.filter(movieid=movie).count()
-        
-        # atualiza o modelo de movie
-        movie.average_rating = average_rating or 0  
-        movie.num_votes = num_votes
-        movie.save()
