@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.dispatch import receiver
 from migration_backend.processes.filters import MovieFilter
 from migration_backend.processes.tasks import stream_csv_in_chunks
 from rest_framework.parsers import MultiPartParser
@@ -7,20 +8,18 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.utils import timezone
 import os
-from django.db.models import Q
+from django.db.models import Q, Count
 
-from django.core.cache import cache
-from django.core.serializers import serialize, deserialize
-import json
 
 from rest_framework.generics import ListAPIView
 from .models import Movie, UploadedFile
 from .serializers import MovieSerializer, UploadedFileSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
-from django.db.models import Avg, Count
+from django.db.models import Avg
 from django.db.models import Func, CharField
 from rest_framework.permissions import AllowAny
+
 
 class UploadFilesView(APIView):
     parser_classes = [MultiPartParser]
@@ -108,8 +107,8 @@ class MovieSearchView(ListAPIView):
 
 
         queryset = Movie.objects.annotate(
-            average_rating=Avg('rating__rating'), # media de avaliacoes
-            num_votes=Count('rating'), # numero de avaliacoes
+            average_rating_in_time=Avg('rating__rating'), # media de avaliacoes
+            num_votes_in_time=Count('rating'), # numero de avaliacoes
             release_year=ExtractYearFromTitle('title')  # Extraindo o ano do título
         ).filter(query)
 
