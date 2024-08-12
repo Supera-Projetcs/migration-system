@@ -18,10 +18,12 @@ def process_chunk(self, file_path, start_row, end_row, uploaded_file_id):
 
     chunk_df = pl.read_csv(file_path, skip_rows=start_row, n_rows=end_row - start_row)
 
+    print(chunk_df.head())
+
     table_name = clean_file_name(file_path)
 
     csv_buffer = io.BytesIO()
-    # csv_data = chunk_df.write_csv(csv_buffer)
+    csv_data = chunk_df.write_csv(csv_buffer)
 
     csv_buffer.seek(0)
 
@@ -36,34 +38,17 @@ def process_chunk(self, file_path, start_row, end_row, uploaded_file_id):
 
     try:
         if table_name == "ratings":
-            cursor.copy_expert(
-                f"COPY ratings(userId, movieId, rating, timestamp) FROM STDIN WITH CSV HEADER",
-                csv_buffer,
-            )
+            cursor.copy_expert(f"COPY ratings(userId, movieId, rating, timestamp) FROM STDIN WITH CSV HEADER", csv_buffer)
         if table_name == "tags":
-            cursor.copy_expert(
-                f"COPY tags(userId, movieId, tag, timestamp) FROM STDIN WITH CSV HEADER",
-                csv_buffer,
-            )
+            cursor.copy_expert(f"COPY tags(userId, movieId, tag, timestamp) FROM STDIN WITH CSV HEADER", csv_buffer)
         if table_name == "movies":
-            cursor.copy_expert(
-                f"COPY movies(movieId, title, genres) FROM STDIN WITH CSV HEADER",
-                csv_buffer,
-            )
+            cursor.copy_expert(f"COPY movies(movieId, title, genres) FROM STDIN WITH CSV HEADER", csv_buffer)
         if table_name == "links":
-            cursor.copy_expert(
-                f"COPY links(movieId, imdbId, tmdbId) FROM STDIN WITH CSV HEADER",
-                csv_buffer,
-            )
+            cursor.copy_expert(f"COPY links(movieId, imdbId, tmdbId) FROM STDIN WITH CSV HEADER", csv_buffer)
         if table_name == "genome_scores":
-            cursor.copy_expert(
-                f"COPY genome_scores(movieId, tagId, relevance) FROM STDIN WITH CSV HEADER",
-                csv_buffer,
-            )
+            cursor.copy_expert(f"COPY genome_scores(movieId, tagId, relevance) FROM STDIN WITH CSV HEADER", csv_buffer)
         if table_name == "genome_tags":
-            cursor.copy_expert(
-                f"COPY genome_tags(tagId, tag) FROM STDIN WITH CSV HEADER", csv_buffer
-            )
+            cursor.copy_expert(f"COPY genome_tags(tagId, tag) FROM STDIN WITH CSV HEADER", csv_buffer)
 
         conn.commit()
         uploaded_file.success_count += 1
