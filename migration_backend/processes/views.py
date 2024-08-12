@@ -66,12 +66,13 @@ class UploadedFileListView(ListAPIView):
 
 
 class ExtractYearFromTitle(Func):
-    function = 'regexp_matches'
-    template = "%(function)s(%(expressions)s, '\\((\\d{4})\\)', 'g')[1]"
+    function = 'regexp_replace'
+    template = "%(function)s(%(expressions)s, '\\D*(\\d{4})\\D*', '\\1', 'g')"
     output_field = CharField()
 
     def __init__(self, expression, **extra):
         super().__init__(expression, output_field=CharField(), **extra)
+        
 class MovieSearchView(ListAPIView):
     serializer_class = MovieSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter]
