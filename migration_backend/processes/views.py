@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.dispatch import receiver
 from migration_backend.processes.filters import MovieFilter
 from migration_backend.processes.tasks import stream_csv_in_chunks
 from rest_framework.parsers import MultiPartParser
@@ -9,13 +10,14 @@ from django.utils import timezone
 import os
 
 from rest_framework.generics import ListAPIView
-from .models import Movie, UploadedFile
+from .models import Movie, Rating, UploadedFile
 from .serializers import MovieSerializer, UploadedFileSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
-from django.db.models import Avg, Count
+from django.db.models import Avg
 from django.db.models import Func, CharField
 from rest_framework.permissions import AllowAny
+from django.db.models.signals import post_save
 
 class UploadFilesView(APIView):
     parser_classes = [MultiPartParser]
@@ -79,10 +81,7 @@ class MovieSearchView(ListAPIView):
 
     def get_queryset(self):
         queryset = Movie.objects.annotate(
-            average_rating=Avg('rating__rating'), # media de avaliacoes
-            num_votes=Count('rating'), # numero de avaliacoes
             release_year=ExtractYearFromTitle('title')  # Extraindo o ano do título
-        
         )
 
         min_rating = self.request.query_params.get('min_rating')
@@ -125,3 +124,17 @@ class ListUploadedFilesView(APIView):
         uploaded_files = UploadedFile.objects.all()
         serializer = UploadedFileSerializer(uploaded_files, many=True)
         return Response(serializer.data)
+
+
+@receiver(post_save, sender=Rating)
+def update_movie_ratings(sender, instance, **kwargs):
+    # acessa o id do filme na avaliacao
+    if instance.movieid:
+        movie = instance.movieid
+        average_rating = Rating.objects.filter(movieid=movie).aggregate(Avg('rating'))['rating__avg']
+        num_votes = Rating.objects.filter(movieid=movie).count()
+        
+        # atualiza o modelo de movie
+        movie.average_rating = average_rating or 0  
+        movie.num_votes = num_votes
+        movie.save()

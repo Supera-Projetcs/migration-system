@@ -13,8 +13,6 @@ class LinkSerializer(serializers.ModelSerializer):
         fields = ['imdbid', 'tmdbid']
 
 class MovieSerializer(serializers.ModelSerializer):
-    average_rating = serializers.FloatField(read_only=True)
-    num_votes = serializers.IntegerField(read_only=True)
     link = LinkSerializer(source='link_set.first', read_only=True) 
 
     class Meta:

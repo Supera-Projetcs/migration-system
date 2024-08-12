@@ -4,6 +4,8 @@ class Movie(models.Model):
     movieid = models.IntegerField(primary_key=True, unique=True, auto_created=False)
     title = models.CharField(max_length=255, null=True)
     genres = models.CharField(max_length=255, null=True)
+    average_rating = models.FloatField(null=True, default=0)
+    num_votes = models.IntegerField(null=True, default=0)
 
     class Meta:
         db_table = "movies"
