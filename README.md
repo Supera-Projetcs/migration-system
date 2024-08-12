@@ -112,6 +112,10 @@ Aqui são salvos todos os chunks processados dos arquivos, e também serve para 
 | `errors`         | `TextField`     | `null=True`                       | Erros encontrados                |
 
 
+## Modelo lógico
+
+![image](https://github.com/user-attachments/assets/285e0b17-0508-4e98-9609-5140ebaa4912)
+
 ## Explicação do Projeto
 
 Nosso projeto é dividido em duas partes principais: Front End e Back End. A divisão foi feita para facilitar o consumo de APIs externas e o envio de arquivos. Algumas abordagens de processamento no Front End foram abandonadas em favor de uma solução mais eficiente no Back End.
