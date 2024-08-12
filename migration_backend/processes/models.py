@@ -45,7 +45,7 @@ class GenomeTag(models.Model):
 
 class Rating(models.Model):
     userid = models.IntegerField(null=True)
-    movieid = models.ForeignKey(Movie, on_delete=models.CASCADE)
+    movieid = models.ForeignKey(Movie, on_delete=models.CASCADE, db_column="movieid")
     rating = models.FloatField(null=True)
     timestamp = models.CharField(max_length=100, null=True)
 
@@ -57,7 +57,7 @@ class Rating(models.Model):
 
 class Tag(models.Model):
     userid = models.IntegerField(null=True)
-    movieid = models.ForeignKey(Movie, on_delete=models.CASCADE)
+    movieid = models.ForeignKey(Movie, on_delete=models.CASCADE, db_column="movieid")
     tag = models.CharField(max_length=255, null=True)
     timestamp = models.CharField(max_length=100, null=True)
 
@@ -66,7 +66,7 @@ class Tag(models.Model):
 
     def __str__(self):
         return f"{self.tag} - {self.movieid}"
-    
+
 #listar arquivos carregados
 class UploadedFile(models.Model):
     file_name = models.CharField(max_length=255)
